@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L I N K U P - Machine 1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-primary: #58a6ff;
+            --accent-hover: #79c0ff;
+            --sent-bubble: #1f6feb;
+            --received-bubble: #21262d;
+            --border-color: #30363d;
+            --success-bg: #238636;
+            --warning-bg: #9e6a03;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px var(--shadow);
+            z-index: 10;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: 0.35em;
+            font-family: 'Segoe UI', 'Arial Black', Arial, sans-serif;
+            text-transform: uppercase;
+        }
+        
+        .machine-badge {
+            background: var(--accent-primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--bg-primary);
+            border-color: var(--accent-primary);
+        }
+        
+        .status {
+            text-align: center;
+            padding: 10px;
+            background: var(--warning-bg);
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        
+        .status.connected {
+            background: var(--success-bg);
+        }
+        
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 20px 100px 20px; /* Add bottom padding for fixed input */
+            background: var(--bg-primary);
+            scroll-behavior: smooth;
+            height: calc(100vh - 70px); /* Adjust for header and input */
+            box-sizing: border-box;
+        }
+        
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-container::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: var(--border-color);
+        }
+        
+        .message {
+            margin-bottom: 16px;
+            display: flex;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px) scale(0.95);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .message.sent {
+            justify-content: flex-end;
+        }
+        
+        .message.received {
+            justify-content: flex-start;
+        }
+        
+        .message-bubble {
+            max-width: 65%;
+            min-width: 100px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            position: relative;
+            box-shadow: 0 1px 3px var(--shadow);
+            transition: transform 0.2s;
+        }
+        
+        .message-bubble:hover {
+            transform: scale(1.02);
+        }
+        
+        .message.sent .message-bubble {
+            background: var(--sent-bubble);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message.received .message-bubble {
+            background: var(--received-bubble);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message-text {
+            font-size: 14px;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+        
+        .message-text a {
+            color: var(--accent-hover);
+            text-decoration: underline;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .message-text a:hover {
+            opacity: 0.8;
+        }
+        
+        .message.sent .message-text a {
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        .message-time {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            text-align: right;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+        
+        .message.sent .message-time {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .input-container {
+            background: var(--bg-secondary);
+            padding: 16px 20px;
+            display: flex;
+            gap: 12px;
+            border-top: 1px solid var(--border-color);
+            box-shadow: 0 -2px 8px var(--shadow);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        #messageInput {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        #messageInput:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+        }
+        
+        #messageInput::placeholder {
+            color: var(--text-secondary);
+        }
+        
+        #sendButton {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        #sendButton:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+        }
+        
+        #sendButton:active {
+            transform: translateY(0);
+        }
+        
+        #sendButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Light Theme */
+        body.light-theme {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #ffffff;
+            --text-primary: #24292f;
+            --text-secondary: #57606a;
+            --accent-primary: #0969da;
+            --accent-hover: #0550ae;
+            --sent-bubble: #0969da;
+            --received-bubble: #f6f8fa;
+            --border-color: #d0d7de;
+            --success-bg: #2da44e;
+            --warning-bg: #bf8700;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .message-bubble {
+                max-width: 85%;
+            }
+            
+            .header {
+                padding: 12px 16px;
+            }
+            
+            .header-title {
+                font-size: 16px;
+            }
+            
+            .input-container {
+                padding: 12px 16px;
+            }
+            
+            #sendButton {
+                padding: 12px 20px;
+            }
+        }
+        
+        /* Notification Toast */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px var(--shadow);
+            animation: slideInRight 0.3s ease-out;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .toast.success {
+            border-left: 4px solid var(--success-bg);
+        }
+        
+        .toast.error {
+            border-left: 4px solid #da3633;
+        }
+        
+        /* Auth Screen */
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: var(--bg-primary);
+        }
+        
+        .auth-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 8px 24px var(--shadow);
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .auth-header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .auth-header .machine-badge {
+            display: inline-block;
+            margin-top: 8px;
+        }
+        
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .form-group input {
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        .form-group input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+        }
+        
+        .auth-button {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+        
+        .auth-button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+        }
+        
+        .auth-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .auth-switch a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+        
+        .user-name {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+        
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .logout-btn:hover {
+            background: var(--bg-primary);
+            border-color: #da3633;
+            color: #da3633;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        #chatScreen {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Screen -->
+    <div id="authScreen" class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <h1 style="color:#fff;font-size:2em;font-weight:900;letter-spacing:0.35em;font-family:'Segoe UI','Arial Black',Arial,sans-serif;text-transform:uppercase;">L I N K U P</h1>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter your username" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password">
+                </div>
+                <button class="auth-button" onclick="handleLogin()">Login</button>
+                <div class="auth-switch">
+                    Don't have an account? <a onclick="showSignup()">Sign up</a>
+                </div>
+            </div>
+            
+            <!-- Signup Form -->
+            <div id="signupForm" class="auth-form hidden">
+                <div class="form-group">
+                    <label for="signupUsername">Username</label>
+                    <input type="text" id="signupUsername" placeholder="Choose a username" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" placeholder="Choose a password" autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label for="signupConfirmPassword">Confirm Password</label>
+                    <input type="password" id="signupConfirmPassword" placeholder="Confirm your password" autocomplete="new-password">
+                </div>
+                <button class="auth-button" onclick="handleSignup()">Sign Up</button>
+                <div class="auth-switch">
+                    Already have an account? <a onclick="showLogin()">Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chat Screen -->
+    <div id="chatScreen" class="hidden">
+        <div class="header">
+            <div class="header-left">
+                <div class="header-title">L I N K U P</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div class="user-info">
+                    
+                    <span class="user-name" id="currentUser"></span>
+                </div>
+            </div>
+        </div>
+        <div class="status" id="status">Connecting...</div>
+        <div class="chat-container" id="chatContainer"></div>
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="Type a message..." />
+            <button id="sendButton">
+                <span>Send</span>
+                <span>→</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+const API_URL = 'http://localhost:8080'; // Machine 1 port
+
+
+// Theme toggle removed; only dark theme is used.
+const chatContainer = document.getElementById('chatContainer');
+const messageInput = document.getElementById('messageInput');
+const sendButton = document.getElementById('sendButton');
+const statusDiv = document.getElementById('status');
+let currentUsername = '';
+let isLoggedIn = false;
+
+window.addEventListener('DOMContentLoaded', () => {
+    loadTheme();
+    showAuthScreen();
+});
+
+function showAuthScreen() {
+    document.getElementById('authScreen').classList.remove('hidden');
+    document.getElementById('chatScreen').classList.add('hidden');
+    currentUsername = '';
+    isLoggedIn = false;
+    document.getElementById('currentUser').textContent = '';
+}
+
+function showChatScreen() {
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('chatScreen').classList.remove('hidden');
+    document.getElementById('currentUser').textContent = currentUsername;
+    loadHistory();
+    connectSSE();
+}
+
+function showSignup() {
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('signupForm').classList.remove('hidden');
+}
+function showLogin() {
+    document.getElementById('signupForm').classList.add('hidden');
+    document.getElementById('loginForm').classList.remove('hidden');
+}
+
+async function handleLogin() {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+    if (!username || !password) {
+        showToast('Please enter username and password', 'error');
+        return;
+    }
+    try {
+        const resp = await fetch(`${API_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await resp.json();
+        if (resp.ok && data.status === 'ok') {
+            currentUsername = username;
+            isLoggedIn = true;
+            showChatScreen();
+            showToast('Login successful', 'success');
+        } else {
+            showToast(data.error || 'Login failed', 'error');
+        }
+    } catch (e) {
+        showToast('Login error: ' + e.message, 'error');
+    }
+}
+
+async function handleSignup() {
+    const username = document.getElementById('signupUsername').value.trim();
+    const password = document.getElementById('signupPassword').value.trim();
+    const confirm = document.getElementById('signupConfirmPassword').value.trim();
+    if (!username || !password || !confirm) {
+        showToast('Please fill all fields', 'error');
+        return;
+    }
+    if (password !== confirm) {
+        showToast('Passwords do not match', 'error');
+        return;
+    }
+    try {
+        const resp = await fetch(`${API_URL}/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await resp.json();
+        if (resp.ok && data.status === 'ok') {
+            currentUsername = username;
+            isLoggedIn = true;
+            showChatScreen();
+            showToast('Signup successful', 'success');
+        } else {
+            showToast(data.error || 'Signup failed', 'error');
+        }
+    } catch (e) {
+        showToast('Signup error: ' + e.message, 'error');
+    }
+}
+
+async function handleLogout() {
+    try {
+        const resp = await fetch(`${API_URL}/logout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await resp.json();
+        if (resp.ok && data.status === 'ok') {
+            showAuthScreen();
+            showToast('Logged out', 'success');
+        } else {
+            showToast(data.error || 'Logout failed', 'error');
+        }
+    } catch (e) {
+        showToast('Logout error: ' + e.message, 'error');
+    }
+}
+
+        // Theme Management
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            body.classList.toggle('light-theme');
+            const isLight = body.classList.contains('light-theme');
+            
+            themeIcon.textContent = isLight ? '☀️' : '🌙';
+            themeText.textContent = isLight ? 'Light' : 'Dark';
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        }
+        
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                document.getElementById('themeIcon').textContent = '☀️';
+                document.getElementById('themeText').textContent = 'Light';
+            }
+        }
+        
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Connect to SSE for real-time updates
+        let eventSource;
+        function connectSSE() {
+            eventSource = new EventSource(`${API_URL}/events`);
+            
+            eventSource.onopen = () => {
+                statusDiv.textContent = '✓ Connected';
+                statusDiv.className = 'status connected';
+            };
+            
+            eventSource.onmessage = (event) => {
+                console.log('[SSE] Received message:', event.data);
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('[SSE] Parsed data:', data);
+                    if (data.type === 'chat') {
+                        console.log('[SSE] Adding chat message:', data.text, '!data.sent:', !data.sent, 'contents_id:', data.contents_id);
+                        addMessage(data.text, !data.sent, data.contents_id, data.username, 'sse');
+                    } else if (data.type === 'file') {
+                        console.log('[SSE] Adding file message:', data.text, '!data.sent:', !data.sent, 'contents_id:', data.contents_id);
+                        addMessage(data.text, !data.sent, data.contents_id, data.username, 'sse');
+                    }
+                } catch (e) {
+                    console.log('[SSE] JSON parse failed, checking for file:', event.data);
+                    if (event.data.startsWith('[FILE]')) {
+                        console.log('[SSE] Adding file message directly:', event.data);
+                        addMessage(event.data, true);
+                    } else {
+                        console.error('Error parsing SSE data:', e, event.data);
+                    }
+                }
+            };
+            
+            eventSource.onerror = () => {
+                statusDiv.textContent = '⚠ Connection lost. Reconnecting...';
+                statusDiv.className = 'status';
+                eventSource.close();
+                setTimeout(connectSSE, 3000);
+            };
+        }
+
+        // Load content from database
+        async function loadHistory() {
+            try {
+                console.log('[FRONTEND] Loading history...');
+                const response = await fetch(`${API_URL}/content`);
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('[FRONTEND] Received data:', data);
+                    
+                    if (data.status === 'success' && data.content) {
+                        // Clear existing messages
+                        chatContainer.innerHTML = '';
+                        
+                        // Add each content item to the chat
+                        for (const item of data.content) {
+                            console.log('[FRONTEND] Processing item:', item);
+                            
+                            // Handle the new data structure from db_get_history()
+                            const contentType = item.type || item.content_type;
+                            if (contentType === 'message' || contentType === 'system') {
+                                const isReceived = item.direction === 'receive';
+                                const displayText = item.text_content || '';
+                                addMessage(displayText, isReceived, item.content_id);
+                            } else if (contentType === 'file') {
+                                const isReceived = item.direction === 'receive';
+                                const fileText = `[FILE] ${item.file_name || 'Unknown'}`;
+                                addMessage(fileText, isReceived, item.content_id);
+                            }
+                        }
+                        console.log('[FRONTEND] History loaded successfully');
+                    } else {
+                        console.log('[FRONTEND] No content in response');
+                    }
+                } else {
+                    console.error('[FRONTEND] Response not OK:', response.status);
+                }
+            } catch (e) {
+                console.error('Failed to load content:', e);
+            }
+        }
+
+        // Format file size for display
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Add message to chat
+        function addMessage(text, isReceived, contentsId) {
+            console.log(`[DEBUG][addMessage] Displaying message:`, {
+                text,
+                isReceived,
+                contentsId
+            });
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isReceived ? 'received' : 'sent'}`;
+            
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const timeDisplay = contentsId ? `#${contentsId} ${time}` : time;
+            
+            let displayContent;
+            if (text.startsWith('[FILE]')) {
+                const match = text.match(/\[FILE\]\s*(?:Sending:|Received:)?\s*(.+)/);
+                if (match && match[1]) {
+                    const filePath = match[1].trim();
+                    displayContent = `<div class="message-text">📎 <a href="#" onclick="openFile('${escapeHtml(filePath)}'); return false;">${escapeHtml(filePath)}</a></div>`;
+                } else {
+                    displayContent = `<div class="message-text">${escapeHtml(text)}</div>`;
+                }
+            } else {
+                displayContent = `<div class="message-text">${escapeHtml(text)}</div>`;
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-bubble">
+                    ${displayContent}
+                    <div class="message-time">${timeDisplay}</div>
+                </div>
+            `;
+            
+            console.log('[addMessage] Adding message element to chat container');
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Open file on the backend host
+        async function openFile(filePath) {
+            try {
+                const resp = await fetch(`${API_URL}/open`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: filePath })
+                });
+                if (!resp.ok) {
+                    const txt = await resp.text();
+                    showToast(`Failed to open file: ${txt}`, 'error');
+                    return;
+                }
+                showToast('File opened successfully', 'success');
+            } catch (e) {
+                showToast('Error opening file: ' + e.message, 'error');
+            }
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Send message
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text || text === 'linkup:logout') return;
+            try {
+                const response = await fetch(`${API_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    // If this is a search command, display only search results
+                    if (text.startsWith('>search:')) {
+                        chatContainer.innerHTML = '';
+                        let results = [];
+                        try {
+                            results = JSON.parse(data.value || '[]');
+                        } catch (e) {
+                            showToast('Search result parse error', 'error');
+                        }
+                        for (const item of results) {
+                            let contentObj = item;
+                            // If item.content is a JSON string, parse it
+                            if (typeof item.content === 'string' && item.content.trim().startsWith('{')) {
+                                try {
+                                    contentObj = JSON.parse(item.content);
+                                    contentObj.content_id = item.content_id;
+                                    contentObj.type = item.type || contentObj.type;
+                                } catch (e) {
+                                    contentObj = item;
+                                }
+                            }
+                            const contentType = contentObj.type || contentObj.content_type;
+                            let displayText = '';
+                            let isReceived = contentObj.direction === 'receive';
+                            if (contentType === 'message' || contentType === 'system') {
+                                displayText = contentObj.text_content || contentObj.content || '';
+                            } else if (contentType === 'file') {
+                                displayText = `[FILE] ${contentObj.file_name || 'Unknown'}`;
+                            }
+                            if (!displayText || displayText.trim() === '') continue;
+                            addMessage(displayText, isReceived, contentObj.content_id);
+                        }
+                        messageInput.value = '';
+                        return;
+                    }
+                    // Existing logic for other messages
+                    if (data.status === 'success' && data.action === 'content_deleted') {
+                        showToast('Deletion successful', 'success');
+                        chatContainer.innerHTML = '';
+                        await loadHistory();
+                    } else {
+                        messageInput.value = '';
+                    }
+                } else {
+                    showToast('Failed to send message', 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            } finally {
+                sendButton.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if (messageInput.value.trim() === 'linkup:logout') {
+                    handleLogout();
+                } else {
+                    sendMessage();
+                }
+            }
+        });
+        
+        // Allow Enter key in login/signup forms
+        document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+        document.getElementById('signupConfirmPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSignup();
+        });
+    </script>
+</body>
+</html>

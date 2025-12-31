@@ -1,0 +1,8 @@
+{
+  "chat_send_fd": 19,
+  "chat_recv_fd": 6,
+  "file_send_fds": [20, 21, 4, 7, 8],
+  "file_recv_fds": [10, 9, 12, 14, 16],
+  "audio_send_fd": 11,
+  "audio_recv_fd": 18
+}
