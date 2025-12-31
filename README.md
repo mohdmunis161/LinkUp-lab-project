@@ -57,6 +57,4 @@ This will generate the `linkup_main` executable.
 - `frontend.html`: Web interface.
 - `db_schema.sql`: Database schema definition.
 
-## License
 
-[Specify License Here, e.g., MIT]
